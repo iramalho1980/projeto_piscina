@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Controle de Projeto: Construção de Piscina V10</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-gradient: linear-gradient(135deg, #2c3e50, #bdc3c7);
+            --glass-bg: rgba(255, 255, 255, 0.18); /* Levemente mais claro */
+            --glass-border: rgba(255, 255, 255, 0.25);
+            --text-color: #f8f9fa;
+            --text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            --card-bg: rgba(255, 255, 255, 0.1);
+            --transition-speed: 0.3s;
+            --accent-color: #3498db;
+            --success-color: #2ecc71;
+            --warning-color: #f1c40f;
+            --danger-color: #e74c3c;
+            --radius-lg: 24px;
+            --radius-md: 16px;
+            --radius-sm: 12px;
+        }
+
+        body.dark-mode {
+            --text-color: #f8f9fa;
+            --glass-bg: rgba(0, 0, 0, 0.3); /* Ajustado para ser menos escuro que a v9 */
+            --glass-border: rgba(255, 255, 255, 0.15);
+            --card-bg: rgba(255, 255, 255, 0.08);
+        }
+
+        body.light-mode {
+            --text-color: #2d3436;
+            --text-shadow: none;
+            --glass-bg: rgba(255, 255, 255, 0.6); /* Mais claro no modo light */
+            --glass-border: rgba(0, 0, 0, 0.1);
+            --card-bg: rgba(255, 255, 255, 0.7);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Ubuntu', sans-serif;
+        }
+
+        body {
+            background: var(--bg-gradient);
+            background-attachment: fixed;
+            min-height: 100vh;
+            color: var(--text-color);
+            text-shadow: var(--text-shadow);
+            transition: background 0.5s ease, color 0.3s ease;
+            overflow-x: hidden;
+            line-height: 1.5;
+        }
+
+        .fade-in { animation: fadeIn 0.6s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Barra de Ferramentas Superior */
+        .top-tools { position: fixed; top: 25px; right: 25px; z-index: 1000; display: flex; gap: 12px; align-items: center; }
+        
+        .tool-btn { 
+            background: var(--glass-bg); 
+            backdrop-filter: blur(15px); 
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid var(--glass-border); 
+            border-radius: 50%; 
+            width: 48px;
+            height: 48px;
+            cursor: pointer; 
+            transition: all var(--transition-speed); 
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+        }
+        .tool-btn:hover { transform: translateY(-2px); background: rgba(255,255,255,0.25); box-shadow: 0 6px 20px rgba(0,0,0,0.2); }
+        
+        .file-manager-btn img { width: 28px; height: 28px; }
+        
+        .dropdown-menu { 
+            position: absolute; 
+            top: 60px; 
+            right: 0; 
+            background: var(--glass-bg); 
+            backdrop-filter: blur(25px); 
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid var(--glass-border); 
+            border-radius: var(--radius-md); 
+            padding: 12px; 
+            display: none; 
+            width: 220px; 
+            box-shadow: 0 15px 35px rgba(0,0,0,0.25); 
+            z-index: 1001;
+        }
+        .dropdown-menu button { 
+            width: 100%; 
+            background: rgba(255,255,255,0.05); 
+            border: 1px solid transparent; 
+            color: var(--text-color); 
+            padding: 12px; 
+            border-radius: var(--radius-sm); 
+            margin-bottom: 8px; 
+            cursor: pointer; 
+            font-weight: 500; 
+            transition: 0.2s; 
+            text-align: left; 
+            display: flex; 
+            align-items: center; 
+            gap: 12px; 
+        }
+        .dropdown-menu button:hover { background: rgba(255,255,255,0.15); border-color: var(--glass-border); }
+        .dropdown-menu button:last-child { margin-bottom: 0; }
+
+        .gear-icon { font-size: 20px; color: var(--text-color); }
+        .skin-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+        .skin-option { height: 40px; border-radius: 10px; cursor: pointer; border: 2px solid transparent; transition: 0.2s; }
+        .skin-option:hover { transform: scale(1.1); border-color: #fff; }
+
+        .container { max-width: 1400px; margin: 0 auto; padding: 60px 25px; }
+        header { text-align: center; margin-bottom: 50px; }
+        h1 { font-weight: 700; letter-spacing: -1px; margin-bottom: 8px; font-size: 3rem; text-transform: uppercase; }
+        header p { opacity: 0.8; font-weight: 300; font-size: 1.2rem; letter-spacing: 1px; }
+
+        /* Dashboard */
+        .dashboard { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 25px; margin-bottom: 50px; }
+        .stat-card { 
+            background: var(--glass-bg); 
+            backdrop-filter: blur(15px); 
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid var(--glass-border); 
+            border-radius: var(--radius-lg); 
+            padding: 30px; 
+            text-align: center; 
+            transition: all var(--transition-speed);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+        }
+        .stat-card:hover { transform: translateY(-8px); box-shadow: 0 12px 40px rgba(0,0,0,0.15); }
+        .stat-value { font-size: 2rem; font-weight: 700; margin-top: 10px; }
+        .stat-label { font-size: 0.75rem; opacity: 0.7; text-transform: uppercase; font-weight: 700; letter-spacing: 1.5px; }
+
+        .progress-container { display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .spinner-box { position: relative; width: 100px; height: 100px; }
+        .spinner-svg { transform: rotate(-90deg); }
+        .spinner-circle-bg { fill: none; stroke: rgba(128,128,128,0.1); stroke-width: 8; }
+        .spinner-circle-progress { fill: none; stroke: var(--accent-color); stroke-width: 8; stroke-linecap: round; stroke-dasharray: 251; stroke-dashoffset: 251; transition: stroke-dashoffset 1.5s cubic-bezier(0.4, 0, 0.2, 1); }
+        .progress-text { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 1.4rem; font-weight: 700; }
+
+        /* Form */
+        .add-task-form { 
+            background: var(--glass-bg); 
+            backdrop-filter: blur(15px);
+            padding: 35px; 
+            border-radius: var(--radius-lg); 
+            margin-bottom: 50px; 
+            display: grid; 
+            grid-template-columns: 1fr 1fr 1fr auto; 
+            gap: 25px; 
+            align-items: end; 
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        }
+        .form-group { display: flex; flex-direction: column; gap: 10px; }
+        .form-group label { font-size: 0.85rem; font-weight: 700; opacity: 0.8; text-transform: uppercase; letter-spacing: 0.5px; }
+        input, textarea { 
+            background: rgba(255,255,255,0.08); 
+            border: 1px solid var(--glass-border); 
+            border-radius: var(--radius-sm); 
+            padding: 14px 18px; 
+            color: var(--text-color); 
+            outline: none; 
+            font-size: 1rem;
+            transition: all 0.3s; 
+        }
+        input:focus, textarea:focus { background: rgba(255,255,255,0.15); border-color: var(--accent-color); box-shadow: 0 0 0 4px rgba(52, 152, 219, 0.2); }
+        input::placeholder, textarea::placeholder { color: var(--text-color); opacity: 0.4; }
+        
+        .full-width { grid-column: 1 / -1; }
+
+        .btn-primary { 
+            background: var(--accent-color); 
+            border: none; 
+            color: #fff; 
+            padding: 14px 30px; 
+            border-radius: var(--radius-sm); 
+            cursor: pointer; 
+            font-weight: 700; 
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s; 
+            box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+        }
+        .btn-primary:hover { background: #2980b9; transform: translateY(-2px); box-shadow: 0 6px 20px rgba(52, 152, 219, 0.4); }
+
+        /* Kanban */
+        .kanban-board { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 30px; align-items: start; }
+        .kanban-column { 
+            background: var(--glass-bg); 
+            backdrop-filter: blur(15px);
+            border: 1px solid var(--glass-border); 
+            border-radius: var(--radius-lg); 
+            padding: 25px; 
+            min-height: 600px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+        }
+        .column-header { 
+            display: flex; 
+            align-items: center; 
+            margin-bottom: 25px; 
+            padding-bottom: 15px; 
+            border-bottom: 1px solid var(--glass-border); 
+        }
+        .column-header i { margin-right: 15px; font-size: 1.4rem; opacity: 0.9; }
+        .column-header h2 { font-size: 1.1rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+        .task-list { min-height: 500px; }
+
+        /* Task Card */
+        .task-card { 
+            background: var(--card-bg); 
+            border: 1px solid var(--glass-border); 
+            border-radius: var(--radius-md); 
+            margin-bottom: 20px; 
+            cursor: pointer; 
+            position: relative; 
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+        .task-card:hover { background: rgba(255,255,255,0.12); transform: translateY(-4px); box-shadow: 0 12px 24px rgba(0,0,0,0.15); }
+        
+        .task-header { padding: 20px; display: flex; justify-content: space-between; align-items: center; }
+        .task-title-wrapper { display: flex; align-items: center; gap: 12px; }
+        .task-title { font-weight: 700; font-size: 1.1rem; }
+        .task-value-preview { font-weight: 500; opacity: 0.8; font-size: 0.95rem; }
+        .expand-icon { transition: transform 0.3s; opacity: 0.6; }
+        .task-card.expanded .expand-icon { transform: rotate(180deg); }
+
+        .task-body { 
+            max-height: 0; 
+            overflow: hidden; 
+            transition: max-height 0.5s cubic-bezier(0, 1, 0, 1); 
+            padding: 0 20px;
+        }
+        .task-card.expanded .task-body { max-height: 1000px; transition: max-height 0.5s ease-in; padding: 0 20px 20px 20px; }
+        
+        .task-details { border-top: 1px solid var(--glass-border); padding-top: 15px; margin-top: 5px; }
+        
+        .task-obs { 
+            background: rgba(0,0,0,0.15); 
+            padding: 12px; 
+            border-radius: 8px; 
+            font-size: 0.85rem; 
+            margin-bottom: 15px; 
+            border-left: 3px solid var(--accent-color);
+            font-style: italic;
+            opacity: 0.9;
+            white-space: pre-wrap;
+        }
+
+        .task-progress-bar { height: 6px; background: rgba(128,128,128,0.1); border-radius: 10px; margin: 15px 0; overflow: hidden; }
+        .task-progress-fill { height: 100%; background: var(--accent-color); width: 0%; transition: width 1s ease; }
+        .task-progress-fill.late { background: var(--danger-color); }
+        
+        .task-dates { font-size: 0.75rem; display: flex; justify-content: space-between; font-weight: 700; opacity: 0.6; text-transform: uppercase; letter-spacing: 0.5px; }
+        
+        .task-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; }
+        .btn-task { 
+            background: rgba(255,255,255,0.08); 
+            border: 1px solid var(--glass-border); 
+            color: var(--text-color); 
+            padding: 8px 14px; 
+            border-radius: 10px; 
+            font-size: 0.75rem; 
+            cursor: pointer; 
+            font-weight: 700; 
+            transition: all 0.2s; 
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .btn-task:hover { background: rgba(255,255,255,0.18); transform: translateY(-1px); }
+        .btn-paid.active { background: var(--success-color); color: #fff; border-color: transparent; box-shadow: 0 4px 12px rgba(46, 204, 113, 0.3); }
+        .btn-complete { background: var(--success-color); color: #fff; border-color: transparent; }
+        .btn-delete:hover { background: var(--danger-color); color: #fff; border-color: transparent; }
+
+        /* Botões de Transferência */
+        .transfer-actions { 
+            display: flex; 
+            gap: 8px; 
+            margin-top: 15px; 
+            padding-top: 15px; 
+            border-top: 1px solid var(--glass-border); 
+        }
+        .btn-transfer { 
+            flex: 1;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--glass-border);
+            color: var(--text-color);
+            padding: 8px;
+            border-radius: 8px;
+            font-size: 0.7rem;
+            cursor: pointer;
+            transition: 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            opacity: 0.8;
+        }
+        .btn-transfer:hover { background: var(--accent-color); color: #fff; opacity: 1; border-color: transparent; }
+        .btn-transfer i { font-size: 0.9rem; }
+
+        /* Modal */
+        #editModal { 
+            display: none; 
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%; 
+            background: rgba(0,0,0,0.5); 
+            z-index: 2000; 
+            align-items: center; 
+            justify-content: center; 
+            backdrop-filter: blur(10px); 
+            -webkit-backdrop-filter: blur(10px);
+        }
+        .modal-content { 
+            background: var(--glass-bg); 
+            backdrop-filter: blur(30px); 
+            -webkit-backdrop-filter: blur(30px);
+            padding: 40px; 
+            border-radius: var(--radius-lg); 
+            width: 500px; 
+            border: 1px solid var(--glass-border); 
+            color: var(--text-color); 
+            box-shadow: 0 25px 60px rgba(0,0,0,0.3); 
+        }
+
+        @media (max-width: 768px) {
+            .add-task-form { grid-template-columns: 1fr; }
+            .container { padding: 40px 15px; }
+            h1 { font-size: 2rem; }
+            .top-tools { top: 15px; right: 15px; }
+        }
+    </style>
+</head>
+<body class="fade-in dark-mode">
+
+    <div class="top-tools">
+        <div style="position: relative;">
+            <div class="tool-btn file-manager-btn" id="fileBtn" title="Arquivos">
+                <img src="https://icons.iconarchive.com/icons/bokehlicia/captiva/128/file-manager-icon.png" alt="Arquivos">
+            </div>
+            <div class="dropdown-menu" id="fileMenu">
+                <button onclick="exportData()"><i class="fas fa-file-export"></i> Exportar JSON</button>
+                <button onclick="document.getElementById('importInput').click()"><i class="fas fa-file-import"></i> Importar JSON</button>
+                <input type="file" id="importInput" style="display: none;" accept=".json" onchange="importData(event)">
+            </div>
+        </div>
+
+        <div style="position: relative;">
+            <div class="tool-btn" id="gearBtn" title="Configurações">
+                <i class="fas fa-palette gear-icon"></i>
+            </div>
+            <div class="dropdown-menu" id="skinMenu">
+                <div style="margin-bottom: 15px;">
+                    <p style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; margin-bottom: 10px; opacity: 0.7;">Temas</p>
+                    <div class="skin-grid">
+                        <div class="skin-option" style="background: linear-gradient(135deg, #2c3e50, #bdc3c7);" onclick="setSkin(0, 'dark')"></div>
+                        <div class="skin-option" style="background: linear-gradient(135deg, #4286f4, #373B44);" onclick="setSkin(1, 'dark')"></div>
+                        <div class="skin-option" style="background: linear-gradient(135deg, #B06AB3, #4568DC);" onclick="setSkin(2, 'dark')"></div>
+                        <div class="skin-option" style="background: linear-gradient(135deg, #636FA4, #E8CBC0);" onclick="setSkin(3, 'dark')"></div>
+                        <div class="skin-option" style="background: linear-gradient(135deg, #19547b, #ffd89b);" onclick="setSkin(4, 'dark')"></div>
+                        <div class="skin-option" style="background: linear-gradient(135deg, #BE5869, #403A3E);" onclick="setSkin(5, 'dark')"></div>
+                    </div>
+                </div>
+                <div style="border-top: 1px solid var(--glass-border); padding-top: 10px;">
+                    <button onclick="toggleMode()"><i class="fas fa-circle-half-stroke"></i> Alternar Modo</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <header>
+            <h1>PROJETO PISCINA</h1>
+            <p>Gestão Inteligente & Visual Moderno</p>
+        </header>
+
+        <div class="dashboard">
+            <div class="stat-card">
+                <div class="stat-label">Investimento Total</div>
+                <div class="stat-value" id="totalExpenses">R$ 0,00</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Total Pago</div>
+                <div class="stat-value" id="paidExpenses" style="color: var(--success-color);">R$ 0,00</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Saldo em Aberto</div>
+                <div class="stat-value" id="openExpenses" style="color: var(--danger-color);">R$ 0,00</div>
+            </div>
+            <div class="stat-card progress-container">
+                <div class="spinner-box">
+                    <svg class="spinner-svg" width="100" height="100">
+                        <circle class="spinner-circle-bg" cx="50" cy="50" r="40"></circle>
+                        <circle class="spinner-circle-progress" id="progressCircle" cx="50" cy="50" r="40"></circle>
+                    </svg>
+                    <div class="progress-text" id="progressText">0%</div>
+                </div>
+                <div class="stat-label" style="margin-top: 12px;">Conclusão Geral</div>
+            </div>
+        </div>
+
+        <div class="add-task-form">
+            <div class="form-group">
+                <label>Descrição da Etapa</label>
+                <input type="text" id="taskTitle" placeholder="Ex: Instalação de Filtros">
+            </div>
+            <div class="form-group">
+                <label>Valor (R$)</label>
+                <input type="number" id="taskValue" placeholder="0.00">
+            </div>
+            <div class="form-group">
+                <label>Data de Entrega</label>
+                <input type="date" id="taskDeadline">
+            </div>
+            <div class="form-group full-width">
+                <label>Observações</label>
+                <textarea id="taskObs" placeholder="Adicione detalhes importantes aqui..." rows="2" style="width: 100%; resize: vertical;"></textarea>
+            </div>
+            <button class="btn-primary full-width" onclick="addTask()">ADICIONAR ETAPA</button>
+        </div>
+
+        <div class="kanban-board">
+            <div class="kanban-column" id="col-lançadas">
+                <div class="column-header"><i class="fas fa-rocket" style="color: #3498db;"></i> <h2>Lançadas</h2></div>
+                <div class="task-list" id="list-lançadas" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+            </div>
+            <div class="kanban-column" id="col-andamento">
+                <div class="column-header"><i class="fas fa-tools" style="color: #f1c40f;"></i> <h2>Em Andamento</h2></div>
+                <div class="task-list" id="list-andamento" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+            </div>
+            <div class="kanban-column" id="col-atrasadas">
+                <div class="column-header" style="color: #e74c3c;"><i class="fas fa-clock"></i> <h2>Atrasadas</h2></div>
+                <div class="task-list" id="list-atrasadas" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+            </div>
+            <div class="kanban-column" id="col-concluídas">
+                <div class="column-header" style="color: #2ecc71;"><i class="fas fa-check-circle"></i> <h2>Concluídas</h2></div>
+                <div class="task-list" id="list-concluídas" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="editModal">
+        <div class="modal-content">
+            <h2 style="margin-bottom: 30px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">Editar Etapa</h2>
+            <input type="hidden" id="editId">
+            <div class="form-group" style="margin-bottom: 20px;">
+                <label>Título</label>
+                <input type="text" id="editTitle" style="width: 100%;">
+            </div>
+            <div class="form-group" style="margin-bottom: 20px;">
+                <label>Valor</label>
+                <input type="number" id="editValue" style="width: 100%;">
+            </div>
+            <div class="form-group" style="margin-bottom: 20px;">
+                <label>Data Final</label>
+                <input type="date" id="editDeadline" style="width: 100%;">
+            </div>
+            <div class="form-group" style="margin-bottom: 30px;">
+                <label>Observações</label>
+                <textarea id="editObs" style="width: 100%; resize: vertical;" rows="4"></textarea>
+            </div>
+            <div style="display: flex; gap: 15px;">
+                <button class="btn-primary" onclick="saveEdit()" style="flex: 1.5;">Salvar Alterações</button>
+                <button class="btn-task" onclick="closeModal()" style="flex: 1; justify-content: center;">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const skins = [
+            "linear-gradient(135deg, #2c3e50, #bdc3c7)",
+            "linear-gradient(135deg, #4286f4, #373B44)",
+            "linear-gradient(135deg, #B06AB3, #4568DC)",
+            "linear-gradient(135deg, #636FA4, #E8CBC0)",
+            "linear-gradient(135deg, #19547b, #ffd89b)",
+            "linear-gradient(135deg, #BE5869, #403A3E)"
+        ];
+
+        let tasks = JSON.parse(localStorage.getItem('piscina_tasks_v10')) || [];
+        let expandedTasks = JSON.parse(localStorage.getItem('piscina_expanded_v10')) || [];
+
+        // Menus
+        document.getElementById('gearBtn').onclick = (e) => {
+            e.stopPropagation();
+            document.getElementById('fileMenu').style.display = 'none';
+            const m = document.getElementById('skinMenu');
+            m.style.display = m.style.display === 'block' ? 'none' : 'block';
+        };
+
+        document.getElementById('fileBtn').onclick = (e) => {
+            e.stopPropagation();
+            document.getElementById('skinMenu').style.display = 'none';
+            const m = document.getElementById('fileMenu');
+            m.style.display = m.style.display === 'block' ? 'none' : 'block';
+        };
+
+        document.addEventListener('click', () => {
+            document.getElementById('skinMenu').style.display = 'none';
+            document.getElementById('fileMenu').style.display = 'none';
+        });
+
+        function setSkin(i, mode) {
+            document.body.style.background = skins[i];
+            document.body.className = 'fade-in ' + (mode === 'light' ? 'light-mode' : 'dark-mode');
+            localStorage.setItem('piscina_skin_mode_v10', mode);
+            localStorage.setItem('piscina_skin_index_v10', i);
+        }
+
+        function toggleMode() {
+            const currentMode = localStorage.getItem('piscina_skin_mode_v10') || 'dark';
+            const currentIndex = localStorage.getItem('piscina_skin_index_v10') || 0;
+            setSkin(currentIndex, currentMode === 'dark' ? 'light' : 'dark');
+        }
+
+        // Backup Logic
+        function exportData() {
+            const dataStr = JSON.stringify(tasks, null, 2);
+            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+            const exportFileDefaultName = 'backup_piscina_' + new Date().toISOString().split('T')[0] + '.json';
+            const linkElement = document.createElement('a');
+            linkElement.setAttribute('href', dataUri);
+            linkElement.setAttribute('download', exportFileDefaultName);
+            linkElement.click();
+        }
+
+        function importData(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const importedTasks = JSON.parse(e.target.result);
+                    if (Array.isArray(importedTasks)) {
+                        tasks = importedTasks;
+                        saveAndRender();
+                        alert('Dados importados com sucesso!');
+                    } else {
+                        alert('Formato de arquivo inválido.');
+                    }
+                } catch (err) {
+                    alert('Erro ao ler o arquivo JSON.');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        // Kanban Logic
+        function allowDrop(ev) { ev.preventDefault(); }
+        function drag(ev) { ev.dataTransfer.setData("text", ev.target.id); }
+        function drop(ev) {
+            ev.preventDefault();
+            const id = ev.dataTransfer.getData("text").split('-')[1];
+            const targetList = ev.target.closest('.task-list');
+            if (targetList) {
+                const newStatus = targetList.id.replace('list-', '');
+                moveTask(id, newStatus);
+            }
+        }
+
+        function moveTask(id, newStatus) {
+            const task = tasks.find(t => t.id == id);
+            if (task) {
+                task.status = newStatus;
+                saveAndRender();
+            }
+        }
+
+        function addTask() {
+            const title = document.getElementById('taskTitle').value;
+            const value = parseFloat(document.getElementById('taskValue').value);
+            const deadline = document.getElementById('taskDeadline').value;
+            const obs = document.getElementById('taskObs').value;
+            if (title && value && deadline) {
+                tasks.push({
+                    id: Date.now(),
+                    title, value, deadline, obs,
+                    created: new Date().toISOString().split('T')[0],
+                    status: 'lançadas',
+                    paid: false
+                });
+                document.getElementById('taskTitle').value = '';
+                document.getElementById('taskValue').value = '';
+                document.getElementById('taskDeadline').value = '';
+                document.getElementById('taskObs').value = '';
+                saveAndRender();
+            }
+        }
+
+        function togglePaid(id, event) {
+            event.stopPropagation();
+            const task = tasks.find(t => t.id == id);
+            task.paid = !task.paid;
+            saveAndRender();
+        }
+
+        function deleteTask(id, event) {
+            event.stopPropagation();
+            if(confirm('Deseja excluir esta etapa?')) {
+                tasks = tasks.filter(t => t.id != id);
+                saveAndRender();
+            }
+        }
+
+        function openEdit(id, event) {
+            event.stopPropagation();
+            const task = tasks.find(t => t.id == id);
+            document.getElementById('editId').value = task.id;
+            document.getElementById('editTitle').value = task.title;
+            document.getElementById('editValue').value = task.value;
+            document.getElementById('editDeadline').value = task.deadline;
+            document.getElementById('editObs').value = task.obs || '';
+            document.getElementById('editModal').style.display = 'flex';
+        }
+
+        function closeModal() { document.getElementById('editModal').style.display = 'none'; }
+
+        function saveEdit() {
+            const id = document.getElementById('editId').value;
+            const task = tasks.find(t => t.id == id);
+            task.title = document.getElementById('editTitle').value;
+            task.value = parseFloat(document.getElementById('editValue').value);
+            task.deadline = document.getElementById('editDeadline').value;
+            task.obs = document.getElementById('editObs').value;
+            closeModal();
+            saveAndRender();
+        }
+
+        function toggleExpand(id) {
+            const index = expandedTasks.indexOf(id);
+            if (index > -1) {
+                expandedTasks.splice(index, 1);
+            } else {
+                expandedTasks.push(id);
+            }
+            localStorage.setItem('piscina_expanded_v10', JSON.stringify(expandedTasks));
+            renderTasks();
+        }
+
+        function calculateProgress(created, deadline) {
+            const start = new Date(created).getTime();
+            const end = new Date(deadline).getTime();
+            const now = new Date().getTime();
+            if (now >= end) return 100;
+            if (now <= start) return 0;
+            const total = end - start;
+            const elapsed = now - start;
+            return Math.round((elapsed / total) * 100);
+        }
+
+        function checkOverdue() {
+            const today = new Date().toISOString().split('T')[0];
+            tasks.forEach(task => {
+                if (task.status !== 'concluídas' && task.deadline < today) {
+                    task.status = 'atrasadas';
+                }
+            });
+        }
+
+        function renderTasks() {
+            checkOverdue();
+            const cols = ['lançadas', 'andamento', 'atrasadas', 'concluídas'];
+            cols.forEach(c => document.getElementById(`list-${c}`).innerHTML = '');
+
+            tasks.forEach(task => {
+                const progress = calculateProgress(task.created, task.deadline);
+                const isDone = task.status === 'concluídas';
+                const isLate = task.status === 'atrasadas';
+                const isExpanded = expandedTasks.includes(task.id);
+                
+                const card = document.createElement('div');
+                card.className = `task-card ${isExpanded ? 'expanded' : ''}`;
+                card.id = `task-${task.id}`;
+                card.draggable = true;
+                card.ondragstart = drag;
+                card.onclick = () => toggleExpand(task.id);
+                
+                const statusOptions = [
+                    { id: 'lançadas', label: 'Lançar', icon: 'fa-rocket' },
+                    { id: 'andamento', label: 'Andamento', icon: 'fa-tools' },
+                    { id: 'atrasadas', label: 'Atrasar', icon: 'fa-clock' },
+                    { id: 'concluídas', label: 'Concluir', icon: 'fa-check-circle' }
+                ];
+
+                const transferButtons = statusOptions
+                    .filter(opt => opt.id !== task.status)
+                    .map(opt => `
+                        <button class="btn-transfer" onclick="event.stopPropagation(); moveTask(${task.id}, '${opt.id}')">
+                            <i class="fas ${opt.icon}"></i>
+                            <span>${opt.label}</span>
+                        </button>
+                    `).join('');
+
+                card.innerHTML = `
+                    <div class="task-header">
+                        <div class="task-title-wrapper">
+                            <i class="fas fa-swimming-pool" style="color: var(--accent-color); font-size: 0.9rem;"></i>
+                            <span class="task-title">${task.title}</span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <span class="task-value-preview">R$ ${task.value.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</span>
+                            <i class="fas fa-chevron-down expand-icon"></i>
+                        </div>
+                    </div>
+                    <div class="task-body">
+                        <div class="task-details">
+                            ${task.obs ? `<div class="task-obs">${task.obs.replace(/\n/g, '<br>')}</div>` : ''}
+                            <div class="task-progress-bar">
+                                <div class="task-progress-fill ${isLate ? 'late' : ''}" style="width: ${isDone ? 100 : progress}%"></div>
+                            </div>
+                            <div class="task-dates">
+                                <span>Início: ${task.created.split('-').reverse().join('/')}</span>
+                                <span>Prazo: ${task.deadline.split('-').reverse().join('/')}</span>
+                            </div>
+
+                            <div class="task-actions">
+                                <button class="btn-task btn-paid ${task.paid ? 'active' : ''}" onclick="togglePaid(${task.id}, event)">
+                                    <i class="fas ${task.paid ? 'fa-check-circle' : 'fa-circle'}"></i> ${task.paid ? 'PAGO' : 'PENDENTE'}
+                                </button>
+                                <button class="btn-task" onclick="openEdit(${task.id}, event)"><i class="fas fa-edit"></i></button>
+                                <button class="btn-task btn-delete" onclick="deleteTask(${task.id}, event)"><i class="fas fa-trash"></i></button>
+                            </div>
+
+                            <div class="transfer-actions">
+                                ${transferButtons}
+                            </div>
+                        </div>
+                    </div>
+                `;
+                document.getElementById(`list-${task.status}`).appendChild(card);
+            });
+
+            updateDashboard();
+        }
+
+        function updateDashboard() {
+            const total = tasks.reduce((acc, t) => acc + t.value, 0);
+            const paid = tasks.filter(t => t.paid).reduce((acc, t) => acc + t.value, 0);
+            const open = total - paid;
+            const doneCount = tasks.filter(t => t.status === 'concluídas').length;
+            const progress = tasks.length > 0 ? Math.round((doneCount / tasks.length) * 100) : 0;
+
+            document.getElementById('totalExpenses').innerText = `R$ ${total.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+            document.getElementById('paidExpenses').innerText = `R$ ${paid.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+            document.getElementById('openExpenses').innerText = `R$ ${open.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+            
+            const circle = document.getElementById('progressCircle');
+            const offset = 251 - (progress / 100) * 251;
+            circle.style.strokeDashoffset = offset;
+            document.getElementById('progressText').innerText = `${progress}%`;
+        }
+
+        function saveAndRender() {
+            localStorage.setItem('piscina_tasks_v10', JSON.stringify(tasks));
+            renderTasks();
+        }
+
+        window.onload = () => {
+            const savedMode = localStorage.getItem('piscina_skin_mode_v10') || 'dark';
+            const savedIndex = localStorage.getItem('piscina_skin_index_v10') || 0;
+            setSkin(savedIndex, savedMode);
+            renderTasks();
+        };
+    </script>
+</body>
+</html>
